@@ -22,10 +22,10 @@
 | Categoria       | Tecnologia                                                                                             |
 | --------------- | ------------------------------------------------------------------------------------------------------ |
 | **Monorepo**    | [npm Workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces)                                     |
-| **Backend**     | [NestJS](https://nestjs.com/), [Prisma](https://www.prisma.io/), [PostgreSQL](https://www.postgresql.org/) |
+| **Backend**     | [NestJS](https://nestjs.com/), [Prisma](https://www.prisma.io/), [SQLite](https://www.sqlite.org/) (dev) / [PostgreSQL](https://www.postgresql.org/) (prod) |
 | **Frontend**    | [Next.js 14](https://nextjs.org/), [React 18](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/) |
 | **Autenticação**| [JWT](https://jwt.io/), [Passport.js](http://www.passportjs.org/)                                        |
-| **Banco de Dados** | [PostgreSQL](https://www.postgresql.org/), [Prisma ORM](https://www.prisma.io/)                         |
+| **Banco de Dados** | [SQLite](https://www.sqlite.org/) (desenvolvimento), [PostgreSQL](https://www.postgresql.org/) (produção), [Prisma ORM](https://www.prisma.io/) |
 | **Testes**      | [Jest](https://jestjs.io/), [Supertest](https://github.com/visionmedia/supertest), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) |
 | **DevOps**      | [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), [GitHub Actions](https://github.com/features/actions) |
 | **Qualidade**   | [ESLint](https://eslint.org/), [Prettier](https://prettier.io/), [Husky](https://typicode.github.io/husky/), [lint-staged](https://github.com/okonet/lint-staged), [commitlint](https://commitlint.js.org/) |
@@ -34,8 +34,8 @@
 
 - [Node.js](https://nodejs.org/en/) (v18 ou superior)
 - [npm](https://www.npmjs.com/) (v9 ou superior)
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Docker](https://www.docker.com/get-started) (opcional, para produção)
+- [Docker Compose](https://docs.docker.com/compose/install/) (opcional, para produção)
 
 ## 🛠️ Instruções de Desenvolvimento Local
 
@@ -58,7 +58,7 @@ npm install
 
 ### 3. Configurar Variáveis de Ambiente
 
-Copie os arquivos `.env.example` para `.env` em cada aplicação e ajuste as variáveis se necessário.
+Copie os arquivos `.env.example` para `.env` em cada aplicação:
 
 - **API (Backend)**:
   ```bash
@@ -70,64 +70,85 @@ Copie os arquivos `.env.example` para `.env` em cada aplicação e ajuste as var
   cp apps/web/.env.example apps/web/.env
   ```
 
-### 4. Iniciar o Banco de Dados com Docker
+### 4. Configurar o Banco de Dados
 
-Para o desenvolvimento, você pode rodar apenas o banco de dados PostgreSQL e o Redis (opcional) com Docker Compose:
+O projeto está configurado para usar **SQLite** em desenvolvimento (mais simples) e **PostgreSQL** em produção.
+
+#### Para Desenvolvimento (SQLite - Recomendado)
 
 ```bash
-npm run docker:dev
+# Navegar para o diretório da API
+cd apps/api
+
+# Gerar o Prisma Client
+npx prisma generate
+
+# Criar e aplicar migrações
+npx prisma migrate dev --name init
+
+# Voltar para o diretório raiz
+cd ../..
 ```
 
-Este comando utiliza o arquivo `docker-compose.dev.yml`.
+#### Para Desenvolvimento com PostgreSQL (Opcional)
+
+Se preferir usar PostgreSQL em desenvolvimento, você precisará do Docker:
+
+```bash
+# Iniciar PostgreSQL com Docker
+docker run --name tasks-pro-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=tasks_pro -p 5432:5432 -d postgres:15-alpine
+
+# Atualizar o schema para PostgreSQL
+# Edite apps/api/prisma/schema.prisma e mude:
+# provider = "sqlite" para provider = "postgresql"
+
+# Atualizar .env da API:
+# DATABASE_URL="postgresql://postgres:password@localhost:5432/tasks_pro?schema=public"
+```
 
 ### 5. Rodar as Aplicações
 
-Com o banco de dados rodando, inicie o backend e o frontend em terminais separados ou usando o script principal.
+Com o banco de dados configurado, inicie o backend e o frontend:
 
-- **Para rodar ambos simultaneamente (recomendado)**:
-  ```bash
-  npm run dev
-  ```
+```bash
+npm run dev
+```
 
-- **Para rodar individualmente**:
-  - **API (Backend)**:
-    ```bash
-    npm run dev:api
-    ```
-  - **Web (Frontend)**:
-    ```bash
-    npm run dev:web
-    ```
+Este comando irá iniciar:
+- **API (Backend)** na porta **3002**
+- **Web (Frontend)** na porta **3000**
 
 ### 6. Acessar as Aplicações
 
 - **Frontend**: [http://localhost:3000](http://localhost:3000)
-- **Backend (API)**: [http://localhost:3001](http://localhost:3001)
-- **Documentação da API (Swagger)**: [http://localhost:3001/api](http://localhost:3001/api)
+- **Backend (API)**: [http://localhost:3002](http://localhost:3002)
+- **Documentação da API (Swagger)**: [http://localhost:3002/api](http://localhost:3002/api)
 
 ### 7. Credenciais de Teste
 
-O banco de dados é populado com usuários de teste via `prisma db seed`:
+O banco de dados é populado automaticamente com usuários de teste:
 
 - **Admin**: `admin@tasks-pro.com` / `admin123`
 - **User**: `user@tasks-pro.com` / `user123`
 
 ## 🐳 Rodando com Docker (Produção)
 
-Para simular o ambiente de produção, onde todas as aplicações são containerizadas, use o `docker-compose.yml` principal.
+Para simular o ambiente de produção com PostgreSQL, use o Docker Compose:
 
 ### 1. Iniciar os Serviços
 
 ```bash
-npm run docker:prod
-```
+# Para produção (com PostgreSQL)
+docker-compose up -d
 
-Este comando irá construir as imagens Docker para a API e o Frontend e iniciar todos os serviços (Postgres, API, Web).
+# Para desenvolvimento (apenas PostgreSQL)
+docker-compose -f docker-compose.dev.yml up -d
+```
 
 ### 2. Parar os Serviços
 
 ```bash
-npm run docker:down
+docker-compose down
 ```
 
 ## 📜 Scripts Disponíveis
@@ -137,7 +158,7 @@ npm run docker:down
 - `npm run test`: Roda os testes unitários e de integração para ambas as aplicações.
 - `npm run lint`: Executa o ESLint para análise de código.
 - `npm run format`: Formata o código com Prettier.
-- `npm run docker:dev`: Inicia os serviços de infraestrutura para desenvolvimento.
+- `npm run docker:dev`: Inicia apenas o PostgreSQL para desenvolvimento.
 - `npm run docker:prod`: Inicia todos os serviços em modo de produção.
 - `npm run docker:down`: Para todos os contêineres do Docker Compose.
 
@@ -145,7 +166,9 @@ npm run docker:down
 
 O projeto está configurado com um pipeline de CI/CD usando **GitHub Actions** (`.github/workflows/ci.yml`).
 
-O pipeline é acionado em cada `push` ou `pull_request` para as branches `main` e `develop` e executa os seguintes passos:
+⚠️ **Nota**: Os workflows do GitHub Actions precisam ser adicionados manualmente devido a limitações de permissão do GitHub App.
+
+O pipeline executa os seguintes passos:
 
 1.  **Lint & Format**: Verifica a formatação e a qualidade do código.
 2.  **Test API**: Roda os testes unitários e e2e da API contra um banco de dados de teste.
@@ -154,5 +177,71 @@ O pipeline é acionado em cada `push` ou `pull_request` para as branches `main` 
 5.  **Docker Build & Push**: (Apenas na branch `main`) Constrói e envia as imagens Docker para o GitHub Container Registry (GHCR).
 6.  **Security Scan**: Analisa as dependências em busca de vulnerabilidades conhecidas.
 
-Um workflow de deploy (`deploy.yml`) também está configurado para ser acionado manualmente ou em novas releases, demonstrando um fluxo de deploy para ambientes de `staging` ou `production`.
+## 🚀 Status do Projeto
 
+- ✅ **Backend NestJS**: Funcionando na porta 3002
+- ✅ **Frontend Next.js**: Funcionando na porta 3000
+- ✅ **Banco SQLite**: Configurado e populado
+- ✅ **Autenticação JWT**: Implementada e testada
+- ✅ **RBAC**: Sistema de roles funcionando
+- ✅ **Swagger**: Documentação disponível
+- ✅ **Testes**: Unitários implementados
+- ✅ **Docker**: Configurado para produção
+
+## 🐛 Solução de Problemas
+
+### Erro de Porta em Uso
+
+Se encontrar erro de porta em uso, mate os processos:
+
+```bash
+# Matar processos na porta 3000 (frontend)
+lsof -ti:3000 | xargs kill -9
+
+# Matar processos na porta 3002 (backend)
+lsof -ti:3002 | xargs kill -9
+```
+
+### Problemas com Prisma
+
+Se encontrar problemas com o Prisma Client:
+
+```bash
+cd apps/api
+npx prisma generate
+npx prisma migrate reset --force
+```
+
+### Problemas com Dependências
+
+Se encontrar problemas com dependências:
+
+```bash
+# Limpar cache e reinstalar
+rm -rf node_modules package-lock.json
+rm -rf apps/*/node_modules
+npm install
+```
+
+## 📝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'feat: add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 👥 Autores
+
+- **Rodrigo Spisila** - *Desenvolvimento inicial* - [rodrigospisila](https://github.com/rodrigospisila)
+
+## 🙏 Agradecimentos
+
+- [NestJS](https://nestjs.com/) pela excelente framework backend
+- [Next.js](https://nextjs.org/) pelo framework frontend moderno
+- [Prisma](https://www.prisma.io/) pelo ORM intuitivo
+- [Tailwind CSS](https://tailwindcss.com/) pelo sistema de design

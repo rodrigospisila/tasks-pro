@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+// This is your Prisma schema file for development with SQLite
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -7,14 +7,19 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  role      String   @default("USER")
+  role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

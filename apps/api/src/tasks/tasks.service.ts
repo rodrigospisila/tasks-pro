@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { User, Role } from '@prisma/client';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
@@ -23,7 +23,7 @@ export class TasksService {
 
   async findAll(user: User) {
     // Admins podem ver todas as tarefas, usuários comuns apenas as suas
-    if (user.role === Role.ADMIN) {
+    if (user.role === 'ADMIN') {
       return this.prisma.task.findMany({
         include: {
           owner: {
@@ -69,7 +69,7 @@ export class TasksService {
     }
 
     // Verificar se o usuário tem permissão para ver a tarefa
-    if (user.role !== Role.ADMIN && task.ownerId !== user.id) {
+    if (user.role !== 'ADMIN' && task.ownerId !== user.id) {
       throw new ForbiddenException('Acesso negado a esta tarefa');
     }
 
@@ -86,7 +86,7 @@ export class TasksService {
     }
 
     // Verificar se o usuário tem permissão para atualizar a tarefa
-    if (user.role !== Role.ADMIN && task.ownerId !== user.id) {
+    if (user.role !== 'ADMIN' && task.ownerId !== user.id) {
       throw new ForbiddenException('Acesso negado para atualizar esta tarefa');
     }
 
@@ -106,7 +106,7 @@ export class TasksService {
     }
 
     // Verificar se o usuário tem permissão para deletar a tarefa
-    if (user.role !== Role.ADMIN && task.ownerId !== user.id) {
+    if (user.role !== 'ADMIN' && task.ownerId !== user.id) {
       throw new ForbiddenException('Acesso negado para deletar esta tarefa');
     }
 

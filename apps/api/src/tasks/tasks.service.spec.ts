@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TasksService } from './tasks.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
-import { Role } from '@prisma/client';
+// Removido import do Role - usando strings diretamente
 
 describe('TasksService', () => {
   let service: TasksService;
@@ -12,7 +12,7 @@ describe('TasksService', () => {
     id: 'user-1',
     email: 'user@test.com',
     password: 'hashedpassword',
-    role: Role.USER,
+    role: 'USER',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -21,7 +21,7 @@ describe('TasksService', () => {
     id: 'admin-1',
     email: 'admin@test.com',
     password: 'hashedpassword',
-    role: Role.ADMIN,
+    role: 'ADMIN',
     createdAt: new Date(),
     updatedAt: new Date(),
   };

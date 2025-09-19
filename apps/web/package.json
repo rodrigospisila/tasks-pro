@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@tasks-pro/eslint-config": "*",
-    "@types/node": "^20.10.4",
+    "@types/node": "^24.5.2",
     "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
     "@types/js-cookie": "^3.0.6",
